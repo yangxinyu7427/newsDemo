@@ -99,8 +99,8 @@
         <el-container direction="vertical">
           <el-header style="height: 50px;">查询结果</el-header>
           <el-main class="table-main">
-            <el-table :data="tableData" border>
-              <el-table-column v-for="(value, key) in tableColumns" :key="key" :prop="key" :label="key"></el-table-column>
+            <el-table :data="tableData" stripe border>
+              <el-table-column v-for="(value, key) in tableColumns" :key="key" :prop="value" :label="value"></el-table-column>
             </el-table>
           </el-main>
           <el-header style="height: 50px;">优化效果</el-header>
@@ -187,7 +187,7 @@ export default {
     showData() {
       // console.log(tableData);
       this.tableData = NewsData;
-      this.tableColumns = Object.values(NewsData[0]);
+      this.tableColumns = Object.keys(NewsData[0]);
       console.log(this.tableData);
       console.log(this.tableColumns);
     },
