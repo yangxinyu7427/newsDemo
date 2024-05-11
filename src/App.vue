@@ -98,8 +98,11 @@
       <el-main class="right-main">
         <el-container direction="vertical">
           <el-header style="height: 50px;">查询结果</el-header>
+          <el-footer v-if="showNewsCount" class="result-footer">
+            <el-input v-model="newsCountText" :disabled="true" class="news-count-input"></el-input>
+          </el-footer>
           <el-main class="table-main">
-            <el-table :data="tableData" stripe border>
+            <el-table :data="tableData" border stripe> 
               <el-table-column v-for="(value, key) in tableColumns" :key="key" :prop="value" :label="value"></el-table-column>
             </el-table>
           </el-main>
@@ -118,7 +121,7 @@
 
 <script>
 
-import { tableData, chartDatas,NewsData,inferenceResultsData } from './data/data.js';
+import { tableData, chartDatas,NewsData,inferenceResultsData,AbstractData } from './data/data.js';
 import * as echarts from 'echarts'
 
 export default {
@@ -138,7 +141,9 @@ export default {
         { label: '任务3：新闻摘要生成', value: '3' },
         { label: '任务4：新闻兴趣推荐', value: '4' },
       ],
-      widgetIdCounter: 0 // 小组件 ID 计数器
+      widgetIdCounter: 0, // 小组件 ID 计数器
+      newsCountText: '', // 新闻数量文本框显示的内容
+      showNewsCount: false, // 控制是否显示新闻数量文本框
     };
   },
   methods: {
@@ -185,23 +190,27 @@ export default {
     },
     //获取新闻数据按钮，显示所有新闻数据
     showData() {
-      // console.log(tableData);
       this.tableData = NewsData;
       this.tableColumns = Object.keys(NewsData[0]);
-      console.log(this.tableData);
-      console.log(this.tableColumns);
+      this.showNewsCount = true;
+      this.newsCountText = `获取${this.tableData.length}条新闻`
     },
     //执行按钮，显示执行结果
     updateChart(widget) {
       if (widget.type === '1') {
-        const categorySQL = `SELECT title, source, content FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
+        const categorySQL = `SELECT title, source, content, FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
         widget.sql = categorySQL;
-        console.log(categorySQL);
+        this.tableData = inferenceResultsData;
+        this.tableColumns = Object.keys(inferenceResultsData[0]);
+        this.newsCountText = `筛选得到${this.tableData.length}条新闻`
       } else if (widget.type === '2') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
       } else if (widget.type === '3') {
-        const categorySQL = `SELECT PREDICT summary(text) AS summary FROM important_news;`;
+        const categorySQL = `SELECT titile,source,content,PREDICT summary(text) AS summary FROM military_news;`;
         widget.sql = categorySQL;
+        this.tableData = AbstractData;
+        this.tableColumns = Object.keys(AbstractData[0]);
+        this.newsCountText = `查询得到${this.tableData.length}条新闻`
       } else if (widget.type === '4') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
       }
@@ -261,6 +270,17 @@ export default {
 .table-main {
   height: calc(100% - 200px);
   overflow-y: auto;
+}
+
+.el-table {
+  border: 1px solid #e0e0e0; /* 添加表格的边框样式 */
+}
+
+.news-count-input {
+  width: 200px; /* 修改输入框的宽度 */
+  font-weight: bold; /* 加粗文字 */
+  color: #333; /* 修改文字颜色 */
+  font-size: 18px;
 }
 
 .chart-footer {
