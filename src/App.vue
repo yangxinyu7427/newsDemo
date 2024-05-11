@@ -5,7 +5,7 @@
       <el-aside class="left-aside">
         <div class="execute-button-div">
           <el-button @click="showData" class="add-button">获取新闻数据</el-button>
-        </div> 
+        </div>
         <el-select v-model="selectedComponentType" placeholder="选择任务类型">
           <el-option
               v-for="(type, index) in componentTypes"
@@ -38,21 +38,26 @@
               </el-form-item>
               <!-- 任务2 -->
               <el-form-item v-if="widget.type === '2'" label="模型选择（多选）">
-                <el-select v-model="widget.settings.value">
-                  <el-option label="线性回归" value="1"></el-option>
-                  <el-option label="随机梯度下降" value="2"></el-option>
-                  <el-option label="朴素贝叶斯" value="3"></el-option>
+                <el-select v-model="widget.settings.models" multiple>
+                  <el-option label="线性回归" value="lr"></el-option>
+                  <el-option label="随机梯度下降" value="sgd"></el-option>
+                  <el-option label="朴素贝叶斯" value="nb"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item v-if="widget.type === '2'" label="选择价值范围">
                 <el-select v-model="widget.settings.value">
-                  <el-option label="低" value="low"></el-option>
-                  <el-option label="中" value="medium"></el-option>
-                  <el-option label="高" value="high"></el-option>
+                  <el-option label="低" value="1"></el-option>
+                  <el-option label="中" value="3"></el-option>
+                  <el-option label="高" value="5"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item v-if="widget.type === '2'" label="开启查询内冗余消除">
                 <el-checkbox v-model="widget.settings.checked"></el-checkbox>
+              </el-form-item>
+              <el-form-item v-if="widget.type === '2'" label="SQL语句：">
+              </el-form-item>
+              <el-form-item v-if="widget.type === '2'">
+                <el-input type="textarea" :rows="5" :value="widget.sql"></el-input>
               </el-form-item>
               <!-- 任务3 -->
               <el-form-item v-if="widget.type === '3'" label="选择模型加速策略">
@@ -75,16 +80,21 @@
               </el-form-item>
               <el-form-item v-if="widget.type === '4'" label="选择价值范围">
                 <el-select v-model="widget.settings.value">
-                  <el-option label="低" value="low"></el-option>
-                  <el-option label="中" value="medium"></el-option>
-                  <el-option label="高" value="high"></el-option>
+                  <el-option label="低" value="1"></el-option>
+                  <el-option label="中" value="3"></el-option>
+                  <el-option label="高" value="5"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item v-if="widget.type === '4'" label="返回新闻条数">
-                <el-input v-model="widget.settings.text"></el-input>
+                <el-input v-model="widget.settings.num"></el-input>
               </el-form-item>
               <el-form-item v-if="widget.type === '4'" label="开启查询间冗余消除">
                 <el-checkbox v-model="widget.settings.checked"></el-checkbox>
+              </el-form-item>
+              <el-form-item v-if="widget.type === '4'" label="SQL语句：">
+              </el-form-item>
+              <el-form-item v-if="widget.type === '4'">
+                <el-input type="textarea" :rows="10" :value="widget.sql"></el-input>
               </el-form-item>
             </el-form>
             <div class="execute-button-div">
@@ -121,7 +131,7 @@
 
 <script>
 
-import { tableData, chartDatas,NewsData,inferenceResultsData,AbstractData } from './data/data.js';
+import {task4Data, task2Data, chartDatas,NewsData,inferenceResultsData,AbstractData } from './data/data.js';
 import * as echarts from 'echarts'
 
 export default {
@@ -177,15 +187,24 @@ export default {
         // ECharts配置项
         xAxis: {
           type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          data: ['sql执行时间', 'udf执行时间']
         },
         yAxis: {
           type: 'value'
         },
-        series: [{
-          data: [120, 200, 150, 80, 70, 110, 130],
-          type: 'bar'
-        }]
+        series: [
+          {
+            name: 'unopted', // 第一个数据系列的名称
+            type: 'bar',
+            data: [120, 200] // 第一个数据系列的数据
+          },
+          {
+            name: 'opted', // 第二个数据系列的名称
+            type: 'bar',
+            data: [220, 180] // 第二个数据系列的数据
+          }
+          // 可以继续添加更多数据系列
+        ]
       })
     },
     //获取新闻数据按钮，显示所有新闻数据
@@ -198,23 +217,34 @@ export default {
     //执行按钮，显示执行结果
     updateChart(widget) {
       if (widget.type === '1') {
-        const categorySQL = `SELECT title, source, content, FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
+        const categorySQL = `SELECT title, source, content, predict is_military(content) as category, probability FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
         widget.sql = categorySQL;
         this.tableData = inferenceResultsData;
         this.tableColumns = Object.keys(inferenceResultsData[0]);
         this.newsCountText = `筛选得到${this.tableData.length}条新闻`
       } else if (widget.type === '2') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
+        const concatenatedValues = widget.settings.models.join('(content) + PREDICT ');
+        const categorySQL = `SELECT content FROM news WHERE PREDICT ${concatenatedValues}(content) >= ${widget.settings.value*widget.settings.models.length};`;
+        widget.sql = categorySQL;
+        this.tableData = task2Data;
+        this.tableColumns = Object.keys(task2Data[0]);
+        this.newsCountText = `查询得到${this.tableData.length}条新闻`
       } else if (widget.type === '3') {
-        const categorySQL = `SELECT titile,source,content,PREDICT summary(text) AS summary FROM military_news;`;
+        const categorySQL = `SELECT source,content,PREDICT summary(text) AS summary FROM military_news;`;
         widget.sql = categorySQL;
         this.tableData = AbstractData;
         this.tableColumns = Object.keys(AbstractData[0]);
         this.newsCountText = `查询得到${this.tableData.length}条新闻`
       } else if (widget.type === '4') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
+        const categorySQL = `select PREDICT summary(content) AS summary, content from news where predict sgd(text)>=${widget.settings.value} order by predict news_similar('${widget.settings.text}',content) DESC limit ${widget.settings.num};`;
+        widget.sql = categorySQL;
+        this.tableData = task4Data;
+        this.tableColumns = Object.keys(task4Data[0]);
+        this.newsCountText = `查询得到${this.tableData.length}条新闻`
       }
-    }
+    },
     // 其他方法...
   }
 };
