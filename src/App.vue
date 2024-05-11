@@ -122,6 +122,24 @@
             <div class="chart-box" v-for="(chartData, index) in chartDatas" :key="index">
               <div id="chart" style="height: 400px;"></div>
             </div>
+            <div class="pic-container" v-if="this.showedComponentType === '2'">
+              <div>
+                <el-select v-model="selectedImage" placeholder="选择图片" @change="changeImage">
+                  <el-option label="model-lr" value="model-lr"></el-option>
+                  <el-option label="model-nb" value="model-nb"></el-option>
+                  <el-option label="model-sgd" value="model-sgd"></el-option>
+                </el-select>
+                <el-image :src=selectedImageSource class="left-image" fit="fill"></el-image>
+              </div>
+              <div>
+                <el-image :src=this.png_opted class="right-image"></el-image>
+              </div>
+            </div>
+            <div class="pic-container" v-if="this.showedComponentType === '4'">
+              <el-header style="height: 50px;">缓存命中率</el-header>
+              <el-header style="height: 20px;">model-sgd:42%</el-header>
+              <el-header style="height: 20px;">model-summary:20%</el-header>
+            </div>
           </el-footer>
         </el-container>
       </el-main>
@@ -133,6 +151,10 @@
 
 import {task4Data, task2Data, chartDatas,NewsData,inferenceResultsData,AbstractData } from './data/data.js';
 import * as echarts from 'echarts'
+import png_opted from '../src/pic/model-opted.png';
+import png_lr from '../src/pic/model-lr.png';
+import png_nb from '../src/pic/model-nb.png';
+import png_sgd from '../src/pic/model-sgd.png';
 
 export default {
   mounted() {
@@ -140,6 +162,12 @@ export default {
   },
   data() {
     return {
+      showedComponentType:'',
+      png_opted:png_opted,
+      png_lr:png_lr,
+      png_nb:png_nb,
+      png_sgd:png_sgd,
+      selectedImage: 'model-lr', // 默认选择第一张图片
       tableData: [],     //表格数据
       tableColumns: [],   //表格属性列
       chartDatas: chartDatas,
@@ -156,7 +184,22 @@ export default {
       showNewsCount: false, // 控制是否显示新闻数量文本框
     };
   },
+  computed: {
+    selectedImageSource() {
+      if(this.selectedImage==='model-lr'){
+        return this.png_lr;
+      }else if(this.selectedImage==='model-nb'){
+        return this.png_nb;
+      }else if(this.selectedImage==='model-sgd'){
+        return this.png_sgd;
+      }
+    }
+  },
   methods: {
+    changeImage() {
+      // 在这里可以根据需要执行更多操作
+      console.log('选中的图片:', this.selectedImage);
+    },
     addWidget() {
       const newWidget = {
         id: this.widgetIdCounter++, // 为小部件生成唯一 ID
@@ -222,6 +265,7 @@ export default {
         this.tableData = inferenceResultsData;
         this.tableColumns = Object.keys(inferenceResultsData[0]);
         this.newsCountText = `筛选得到${this.tableData.length}条新闻`
+        this.showedComponentType='1';
       } else if (widget.type === '2') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
         const concatenatedValues = widget.settings.models.join('(content) + PREDICT ');
@@ -230,12 +274,15 @@ export default {
         this.tableData = task2Data;
         this.tableColumns = Object.keys(task2Data[0]);
         this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.showedComponentType='2';
       } else if (widget.type === '3') {
         const categorySQL = `SELECT source,content,PREDICT summary(text) AS summary FROM military_news;`;
         widget.sql = categorySQL;
+
         this.tableData = AbstractData;
         this.tableColumns = Object.keys(AbstractData[0]);
         this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.showedComponentType='3';
       } else if (widget.type === '4') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
         const categorySQL = `select PREDICT summary(content) AS summary, content from news where predict sgd(text)>=${widget.settings.value} order by predict news_similar('${widget.settings.text}',content) DESC limit ${widget.settings.num};`;
@@ -243,6 +290,7 @@ export default {
         this.tableData = task4Data;
         this.tableColumns = Object.keys(task4Data[0]);
         this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.showedComponentType='4';
       }
     },
     // 其他方法...
@@ -251,6 +299,18 @@ export default {
 </script>
 
 <style scoped>
+
+.pic-container {
+  margin-top: 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left-image, .right-image {
+  width: 500px;
+  height: auto;
+}
 
 .container {
   width: 100%; /* 设置容器宽度为100% */
