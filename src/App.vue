@@ -4,7 +4,7 @@
       <!-- 左侧布局 -->
       <el-aside class="left-aside">
         <div class="execute-button-div">
-          <el-button @click="showData" class="add-button">获取新闻数据</el-button>
+          <el-button @click="showData" class="add-button">获取今日新闻数据</el-button>
         </div>
         <el-select v-model="selectedComponentType" placeholder="选择任务类型">
           <el-option
@@ -149,7 +149,7 @@
 
 <script>
 
-import {task4Data, task2Data, chartDatas,NewsData,inferenceResultsData,AbstractData } from './data/data.js';
+import {task4Data, task2Data, chartDatas,NewsData,task1Data,task3Data } from './data/data.js';
 import * as echarts from 'echarts'
 import png_opted from '../src/pic/model-opted.png';
 import png_lr from '../src/pic/model-lr.png';
@@ -255,16 +255,18 @@ export default {
       this.tableData = NewsData;
       this.tableColumns = Object.keys(NewsData[0]);
       this.showNewsCount = true;
-      this.newsCountText = `获取${this.tableData.length}条新闻`
+      // this.newsCountText = `获取${this.tableData.length}条新闻`
+      this.newsCountText = '获取200条新闻'
     },
     //执行按钮，显示执行结果
     updateChart(widget) {
       if (widget.type === '1') {
-        const categorySQL = `SELECT title, source, content, predict is_military(content) as category, probability FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
+        const categorySQL = `SELECT source, content, predict is_military(content) as category, probability FROM news WHERE PREDICT is_military(content) = "${widget.settings.value}";`;
         widget.sql = categorySQL;
-        this.tableData = inferenceResultsData;
-        this.tableColumns = Object.keys(inferenceResultsData[0]);
-        this.newsCountText = `筛选得到${this.tableData.length}条新闻`
+        this.tableData = task1Data;
+        this.tableColumns = Object.keys(task1Data[0]);
+        //this.newsCountText = `筛选得到${this.tableData.length}条新闻`
+        this.newsCountText = `获取50条新闻`
         this.showedComponentType='1';
       } else if (widget.type === '2') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
@@ -273,15 +275,16 @@ export default {
         widget.sql = categorySQL;
         this.tableData = task2Data;
         this.tableColumns = Object.keys(task2Data[0]);
-        this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        //this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.newsCountText = `获取7条新闻`
         this.showedComponentType='2';
       } else if (widget.type === '3') {
         const categorySQL = `SELECT source,content,PREDICT summary(text) AS summary FROM military_news;`;
         widget.sql = categorySQL;
-
-        this.tableData = AbstractData;
-        this.tableColumns = Object.keys(AbstractData[0]);
-        this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.tableData = task3Data;
+        this.tableColumns = Object.keys(task3Data[0]);
+        //this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.newsCountText = `获取7条新闻`
         this.showedComponentType='3';
       } else if (widget.type === '4') {
       // 根据其他组件类型继续拼装对应的 SQL 语句
@@ -289,7 +292,8 @@ export default {
         widget.sql = categorySQL;
         this.tableData = task4Data;
         this.tableColumns = Object.keys(task4Data[0]);
-        this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        //this.newsCountText = `查询得到${this.tableData.length}条新闻`
+        this.newsCountText = `获取5条新闻`
         this.showedComponentType='4';
       }
     },
