@@ -77,4 +77,200 @@ export const chartDatas= [
         ]
     }
     // 可以继续添加更多的图表数据
-]
+];
+
+export const plan = {
+    ID:0,
+    OPERATOR:"HASH JOIN",
+    CHILD_1: {
+        ID:1,
+        OPERATOR:"HASH JOIN",
+        CHILD_1: {
+            ID:2,
+            OPERATOR:"TABLE SCAN"
+        },
+        CHILD_2:{
+            ID:3,
+            OPERATOR:"TABLE SCAN"
+        },
+    },   
+    CHILD_2:{
+        ID:4,
+        OPERATOR:"TABLE SCAN"
+    },
+};
+
+export const opt_plan = {
+    ID:0,
+    OPERATOR:"PREDICT OP",
+    pyudf_metadata: "([name: onnx_expedia])",
+    CHILD_1: {
+        ID:1,	
+        OPERATOR:"HASH JOIN",
+        CHILD_1: {
+            ID:2,
+            OPERATOR:"HASH JOIN",
+            CHILD_1: {
+                ID:3,
+                OPERATOR:"TABLE SCAN"
+            },
+            CHILD_2: {
+                ID:4,
+                OPERATOR:"TABLE SCAN"
+            },
+        },   
+        CHILD_2:{
+            ID:5,
+            OPERATOR:"TABLE SCAN"
+        },
+    },
+};
+
+export const naive_expression = {
+    ID:0,
+    OPERATOR:"GreaterAndEqual",
+    CHILD_1: {
+        ID:1,	
+        OPERATOR:"add",
+        CHILD_1: {
+            ID:2,
+            OPERATOR:"add",
+            CHILD_1: {
+                ID:3,
+                OPERATOR:"model_lr"
+            },
+            CHILD_2: {
+                ID:4,
+                OPERATOR:"model_nb"
+            },
+        },   
+        CHILD_2:{
+            ID:5,
+            OPERATOR:"model_sgd"
+        },
+    },
+    CHILD_2: {
+        ID:6,
+        OPERATOR:"CONST",
+    },
+};
+
+export const opt_expression = {
+    ID:0,
+    OPERATOR:"GreaterAndEqual",
+    CHILD_1: {
+        ID:1,	
+        OPERATOR:"model_merged",
+    },
+    CHILD_2: {
+        ID:2,
+        OPERATOR:"CONST",
+    },
+};
+
+export const function_code = {
+    code: `import numpy as np
+import pandas as pd
+import onnxruntime as ort
+from transformers import T5Tokenizer
+tokenizer = T5Tokenizer.from_pretrained('/root/summary_onnx2/')
+encoder_session = ort.InferenceSession('/root/summary_onnx2/encoder_model.onnx')
+decoder_session = ort.InferenceSession('/root/summary_onnx2/decoder_model.onnx')
+result_list=[]
+input_list=args[0].tolist()
+input_list = ['summarize: ' + text for text in input_list]
+inputs = tokenizer(input_list, return_tensors='np', padding=True, truncation=True, max_length=512)
+input_ids = inputs['input_ids']
+attention_mask = inputs['attention_mask']
+encoder_inputs = {
+    'input_ids': input_ids,
+    'attention_mask': attention_mask,
+}
+encoder_outputs = encoder_session.run(None, encoder_inputs)
+encoder_hidden_states = encoder_outputs[0]
+decoder_input_ids = np.zeros((input_ids.shape[0], 1), dtype=np.int64)
+generated_ids = []
+for _ in range(40):  
+    decoder_inputs = {
+        'input_ids': decoder_input_ids,
+        'encoder_hidden_states': encoder_hidden_states,
+        'encoder_attention_mask': attention_mask,  
+    }
+    decoder_outputs = decoder_session.run(None, decoder_inputs)
+    next_token_logits = decoder_outputs[0][:, -1, :]
+    next_token_id = np.argmax(next_token_logits, axis=-1)
+    decoder_input_ids = np.concatenate([decoder_input_ids, next_token_id[:, None]], axis=-1)
+    generated_ids.append(next_token_id)
+    if np.all(next_token_id == tokenizer.eos_token_id):
+        break
+generated_ids = np.concatenate(generated_ids, axis=-1)
+generated_texts = [tokenizer.decode(ids, skip_special_tokens=True) for ids in generated_ids]
+list_num = len(input_list )
+lists = [[] for _ in range(list_num)]
+res = [[] for _ in range(list_num)]
+count=0
+while count<len(generated_texts):
+    for i in range(list_num):
+        lists[i].append(generated_texts[count])
+        count=count+1
+count=0
+for list in lists:
+    tmp=[elem for elem in list if elem not in ('', '</s>', '<pad>')]
+    res[count]=''.join(elem for elem in tmp)
+    count=count+1
+result_array = np.array(res)
+return result_array`,
+    rewrite_code:`import numpy as np
+import pandas as pd
+import onnxruntime as ort
+from transformers import T5Tokenizer
+def __init__(self):
+    tokenizer = T5Tokenizer.from_pretrained('/root/summary_onnx2/')
+    encoder_session = ort.InferenceSession('/root/summary_onnx2/encoder_model.onnx')
+    decoder_session = ort.InferenceSession('/root/summary_onnx2/decoder_model.onnx')
+def __call__(self,data):
+    result_list=[]
+    input_list=args[0].tolist()
+    input_list = ['summarize: ' + text for text in input_list]
+    inputs = tokenizer(input_list, return_tensors='np', padding=True, truncation=True, max_length=512)
+    input_ids = inputs['input_ids']
+    attention_mask = inputs['attention_mask']
+encoder_inputs = {
+    'input_ids': input_ids,
+    'attention_mask': attention_mask,
+    }
+    encoder_outputs = encoder_session.run(None, encoder_inputs)
+    encoder_hidden_states = encoder_outputs[0]
+    decoder_input_ids = np.zeros((input_ids.shape[0], 1), dtype=np.int64)
+    generated_ids = []
+    for _ in range(40):  
+        decoder_inputs = {
+            'input_ids': decoder_input_ids,
+            'encoder_hidden_states': encoder_hidden_states,
+            'encoder_attention_mask': attention_mask,  
+        }
+        decoder_outputs = decoder_session.run(None, decoder_inputs)
+        next_token_logits = decoder_outputs[0][:, -1, :]
+        next_token_id = np.argmax(next_token_logits, axis=-1)
+        decoder_input_ids = np.concatenate([decoder_input_ids, next_token_id[:, None]], axis=-1)
+        generated_ids.append(next_token_id)
+        if np.all(next_token_id == tokenizer.eos_token_id):
+            break
+    generated_ids = np.concatenate(generated_ids, axis=-1)
+    generated_texts = [tokenizer.decode(ids, skip_special_tokens=True) for ids in generated_ids]
+    list_num = len(input_list )
+    lists = [[] for _ in range(list_num)]
+    res = [[] for _ in range(list_num)]
+    count=0
+    while count<len(generated_texts):
+        for i in range(list_num):
+            lists[i].append(generated_texts[count])
+            count=count+1
+    count=0
+    for list in lists:
+        tmp=[elem for elem in list if elem not in ('', '</s>', '<pad>')]
+        res[count]=''.join(elem for elem in tmp)
+        count=count+1
+    result_array = np.array(res)
+    return result_array`
+}
