@@ -110,9 +110,9 @@ const selectedImage = ref('model-lr');
 const widgets = ref([]);
 const selectedComponentType = ref('');
 const componentTypes = ref([
-      { label: '任务1：地外物体威胁评估', value: '1' },
-      { label: '任务2：航空器电池寿命预测', value: '2' },
-      { label: '任务3：航空器发动机寿命预测', value: '3' },
+      { label: '任务1：运输任务合并预测', value: '1' },
+      { label: '任务2：飞机零件故障预测', value: '2' },
+      { label: '任务3：飞行任务延误判断', value: '3' },
     ]);
 const widgetIdCounter = ref(0);
 // const showNewsCount = ref(false);
@@ -386,26 +386,24 @@ const paginateData = () => {
 // 展示case1查询结果及优化效果
 const showCase1 = async () => {
   showedComponentType.value = '1';
-  sql1.value = `SELECT * from nasa_50w where PREDICT USING Model nasa_rf_model(est_diameter_min, est_diameter_max, relative_velocity, miss_distance, absolute_magnitude) = 0;`;
+  sql1.value = `SELECT * FROM Flights_S_routes_35w JOIN Flights_R1_airlines ON Flights_S_routes_35w.airlineid = Flights_R1_airlines.airlineid JOIN Flights_R2_sairports ON Flights_S_routes_35w.sairportid = Flights_R2_sairports.sairportid JOIN Flights_R3_dairports ON Flights_S_routes_35w.dairportid = Flights_R3_dairports.dairportid WHERE PREDICT USING Model flights_lr_model(slatitude, slongitude, dlatitude, dlongitude, name1, name2, name4, acountry, active, scity, scountry, stimezone, sdst, dcity, dcountry, dtimezone, ddst)+PREDICT USING Model flights_nb_model(slatitude, slongitude, dlatitude, dlongitude, name1, name2, name4, acountry, active, scity, scountry, stimezone, sdst, dcity, dcountry, dtimezone, ddst)+PREDICT USING Model flights_sgd_model(slatitude, slongitude, dlatitude, dlongitude, name1, name2, name4, acountry, active, scity, scountry, stimezone, sdst, dcity, dcountry, dtimezone, ddst)=1;`;
   const encodedSql = encodeURIComponent(sql1.value);
   // 组装url
   if (case1_opted.value) {
-    url.value = `http://172.23.166.102:8000/opted/task1?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/opted/task4?sql=${encodedSql}`;
   } else {
-    url.value = `http://172.23.166.102:8000/unopted/task1?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/unopted/task4?sql=${encodedSql}`;
   }
   console.log(url.value);
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["id","est_diameter_min","est_diameter_max","relative_velocity","miss_distance","absolute_magnitude"];
+    tableColumns.value = ["idx","airlineid","sairportid","dairportid"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "id": row[0],
-        "est_diameter_min": row[1],
-        "est_diameter_max": row[2],
-        "relative_velocity": row[3],
-        "miss_distance": row[4],
-        "absolute_magnitude": row[5],
+        "idx": row[0],
+        "airlineid": row[1],
+        "sairportid": row[2],
+        "dairportid": row[3],
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
@@ -426,26 +424,25 @@ const showCase1 = async () => {
 // 展示case2查询结果及优化效果
 const showCase2 = async () => {
   showedComponentType.value = '2';
-  const concatenatedValues = models.value.join('(text) + predict ');
-  sql2.value = `SELECT id,link,source,text FROM military_news WHERE predict ${concatenatedValues}(text) >= ${value_metric.value * models.value.length};`;
+  sql2.value = `SELECT * from Gears where PREDICT USING Model gears_rf_model(Temp, Visc, Pres, Metal, Water, Additive, pH, Dens, Cond, Oxid) = 0;`;
   const encodedSql = encodeURIComponent(sql2.value);
   // 组装url
   //写一个if逻辑根据是否开启优化传入不同的url
   if (case2_opted.value) {
-    url.value = `http://172.23.166.102:8000/opted/task2?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/opted/task5?sql=${encodedSql}`;
   } else {
-    url.value = `http://172.23.166.102:8000/unopted/task2?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/unopted/task5?sql=${encodedSql}`;
   }
   console.log(url.value);
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["编号","链接","来源","内容"];
+    tableColumns.value = ["ID","Temp","Visc","Pres"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "编号": row[0],
-        "链接": row[1],
-        "来源": row[2],
-        "内容": row[3],
+        "ID": row[0],
+        "Temp": row[1],
+        "Visc": row[2],
+        "Pres": row[3],
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
@@ -466,20 +463,22 @@ const showCase2 = async () => {
 // 展示case3查询结果及优化效果
 const showCase3 = async () => {
   showedComponentType.value = '3';
-  sql3.value = `SELECT ID, PREDICT USING Model cmapss_rf_model(unit_number, time_cycles, setting_1, setting_2, setting_3, s_1, s_2 , s_3 , s_4 , s_5 , s_6 , s_7 , s_8 , s_9 , s_10 , s_11 , s_12 , s_13 , s_14 , s_15 , s_16 , s_17 , s_18 , s_19 , s_20 , s_21) as rul from cmapss where unit_number=1;`;
+  sql3.value = `SELECT * from flights_delay where Distance>1200 and PREDICT USING Model delay_gb_model(DepTime, Distance, Month1, DayofMonth, DayOfWeek, UniqueCarrier, Origin, Dest)=1;`;
   const encodedSql = encodeURIComponent(sql3.value);
   if (case3_opted.value) {
-    url.value = `http://172.23.166.102:8000/opted/task3?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/opted/task6?sql=${encodedSql}`;
   } else {
-    url.value = `http://172.23.166.102:8000/unopted/task3?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/unopted/task6?sql=${encodedSql}`;
   }
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["id","rul"];
+    tableColumns.value = ["Month","DayofMonth","DayOfWeek","DepTime"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "id": row[0],
-        "rul": row[1],
+        "Month": row[0],
+        "DayofMonth": row[1],
+        "DayOfWeek": row[2],
+        "DepTime": row[3]
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
