@@ -3,9 +3,6 @@
     <el-container>
       <!-- 左侧布局 -->
       <el-aside class="left-aside">
-        <div class="execute-button-div">
-          <el-button @click="showData" class="add-button">获取今日新闻数据</el-button>
-        </div>
         <el-select v-model="selectedComponentType" placeholder="选择任务类型">
           <el-option
               v-for="(type, index) in componentTypes"
@@ -22,46 +19,16 @@
                             class="collapse-item">
             <el-form label-position="left" class="collapse-el-item">
               <!-- 任务1 -->
-              <el-form-item v-if="widget.type === '1'" label="选择类别">
-                <el-select v-model="classification">
-                  <el-option label="军事" value="军事"></el-option>
-                  <el-option label="非军事" value="非军事"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item v-if="widget.type === '1'" label="开启数据传输优化">
-                <el-checkbox v-model="case1_opted1"></el-checkbox>
-              </el-form-item>
-              <el-form-item v-if="widget.type === '1'" label="开启批次大小的自适应调整">
-                <el-checkbox v-model="case1_opted2"></el-checkbox>
+              <el-form-item v-if="widget.type === '1'" label="开启优化">
+                <el-checkbox v-model="case1_opted"></el-checkbox>
               </el-form-item>
               <el-form-item v-if="widget.type === '1'" label="SQL语句：">
               </el-form-item>
               <el-form-item v-if="widget.type === '1'">
                 <el-input type="textarea" :rows="5" :value="sql1"></el-input>
-                <!-- <CodeEditor
-                      :lines="10"
-                      :lang="'sql'"
-                      :readonly="true"
-                      fontsize="13"
-                      ref="sql_text1"
-                /> -->
               </el-form-item>
               <!-- 任务2 -->
-              <el-form-item v-if="widget.type === '2'" label="模型选择（多选）">
-                <el-select v-model="models" multiple>
-                  <el-option label="线性回归" value="news_lr"></el-option>
-                  <el-option label="随机梯度下降" value="news_sgd"></el-option>
-                  <el-option label="朴素贝叶斯" value="news_nb"></el-option>
-                </el-select>
-              </el-form-item>
-              <!-- <el-form-item v-if="widget.type === '2'" label="选择价值范围">
-                <el-select v-model="value_metric">
-                  <el-option label="低" value="1"></el-option>
-                  <el-option label="中" value="3"></el-option>
-                  <el-option label="高" value="5"></el-option>
-                </el-select>
-              </el-form-item> -->
-              <el-form-item v-if="widget.type === '2'" label="开启查询内冗余消除">
+              <el-form-item v-if="widget.type === '2'" label="开启优化">
                 <el-checkbox v-model="case2_opted"></el-checkbox>
               </el-form-item>
               <el-form-item v-if="widget.type === '2'" label="SQL语句：">
@@ -70,41 +37,13 @@
                 <el-input type="textarea" :rows="5" :value="sql2"></el-input>
               </el-form-item>
               <!-- 任务3 -->
-              <!-- <el-form-item v-if="widget.type === '3'" label="选择模型加速策略">
-                <el-select v-model="widget.settings.value">
-                  <el-option label="剪枝" value="1"></el-option>
-                  <el-option label="量化" value="2"></el-option>
-                </el-select>
-              </el-form-item> -->
-              <el-form-item v-if="widget.type === '3'" label="开启模型调用上下文复用">
+              <el-form-item v-if="widget.type === '3'" label="开启优化">
                 <el-checkbox v-model="case3_opted"></el-checkbox>
               </el-form-item>
               <el-form-item v-if="widget.type === '3'" label="SQL语句：">
               </el-form-item>
               <el-form-item v-if="widget.type === '3'">
                 <el-input type="textarea" :rows="5" :value="sql3"></el-input>
-              </el-form-item>
-              <!-- 任务4 -->
-              <el-form-item v-if="widget.type === '4'" label="新闻选择">     
-                <el-input v-model="news_text"></el-input>
-              </el-form-item>
-              <!-- <el-form-item v-if="widget.type === '4'" label="选择价值范围">
-                <el-select v-model="value_metric">
-                  <el-option label="低" value="1"></el-option>
-                  <el-option label="中" value="3"></el-option>
-                  <el-option label="高" value="5"></el-option>
-                </el-select>
-              </el-form-item> -->
-              <el-form-item v-if="widget.type === '4'" label="返回新闻条数">
-                <el-input v-model="sql_num"></el-input>
-              </el-form-item>
-              <el-form-item v-if="widget.type === '4'" label="开启查询间冗余消除">
-                <el-checkbox v-model="case4_opted"></el-checkbox>
-              </el-form-item>
-              <el-form-item v-if="widget.type === '4'" label="SQL语句：">
-              </el-form-item>
-              <el-form-item v-if="widget.type === '4'">
-                <el-input type="textarea" :rows="10" :value="sql4"></el-input>
               </el-form-item>
             </el-form>
             <div class="execute-button-div">
@@ -118,9 +57,6 @@
       <el-main class="right-main">
         <el-container direction="vertical">
           <el-header style="height: 50px;">查询结果</el-header>
-          <!-- <el-footer v-if="showNewsCount" class="result-footer">
-            <el-input v-model="newsCountText" :disabled="true" class="news-count-input"></el-input>
-          </el-footer> -->
           <el-main class="table-main">
             <div v-if = "showTabel">
               <el-table :data="paginatedData" border stripe max-height="400"> 
@@ -155,49 +91,6 @@
             <div class="pic-container" v-if="showedComponentType === '3'" style="display: flex; justify-content: center; align-items: center;">
               <div id="chart3" style="width: 400px; height: 400px;"></div>
             </div>
-            <div class="pic-container" v-if="showedComponentType === '4'" style="display: flex; justify-content: center; align-items: center;">
-              <div id="chart4" style="width: 400px; height: 400px;"></div>
-            </div>
-            <!-- udf_batch图 -->
-            <div class="pic-container" v-if="showedComponentType === '1'" style="display: flex; justify-content: center; align-items: center;">
-              <el-card id="batch-time" header="批次大小自适应调整吞吐量（优化前后）">
-                <div id="batch_time_chart" style="width: 400px; height: 400px;"></div>
-              </el-card>
-            </div>
-            <div v-if="showedComponentType === '3'">
-              <el-row :gutter="12">
-                <el-col :span="12">
-                  <el-card id="plan" header="Python UDF(优化前)">
-                    <CodeEditor
-                      :lines="20"
-                      :lang="'python'"
-                      :readonly="true"
-                      fontsize="13"
-                      ref="udf_plan_n"
-                    />
-                  </el-card>
-                </el-col>
-                <el-col :span="12">
-                  <el-card id="plan" header="Python UDF(优化后)">
-                    <CodeEditor
-                      :lines="20"
-                      :lang="'python'"
-                      :readonly="true"
-                      fontsize="13"
-                      ref="udf_plan_o"
-                    />
-                  </el-card>
-                </el-col>
-              </el-row>
-            </div>  
-            <div v-if="showedComponentType === '2'">
-              <el-card id="plan" header="计划树:">
-                <PlanTree content="sql_plan" ref="tree"/>
-              </el-card>
-            </div>
-            <div class="pic-container" v-if="showedComponentType === '4'" style="display: flex; justify-content: center; align-items: center;">
-              <div id="cache-hit-rate-chart" style="width: 400px; height: 400px;"></div>
-            </div>
           </el-footer>
         </el-container>
       </el-main>
@@ -209,10 +102,6 @@
 
 import { ref, onMounted, nextTick } from 'vue';
 import * as echarts from 'echarts'
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
-import PlanTree from './components/PlanTree.vue';
-import CodeEditor from "./components/CodeEditor.vue";
 
 const count = ref(0);
 const showedComponentType = ref(''); 
@@ -221,10 +110,9 @@ const selectedImage = ref('model-lr');
 const widgets = ref([]);
 const selectedComponentType = ref('');
 const componentTypes = ref([
-      { label: '任务1：新闻类别筛选', value: '1' },
-      { label: '任务2：获取高价值新闻', value: '2' },
-      { label: '任务3：新闻摘要生成', value: '3' },
-      { label: '任务4：相关新闻检索', value: '4' },
+      { label: '任务1：地外物体威胁评估', value: '1' },
+      { label: '任务2：航空器电池寿命预测', value: '2' },
+      { label: '任务3：航空器发动机寿命预测', value: '3' },
     ]);
 const widgetIdCounter = ref(0);
 // const showNewsCount = ref(false);
@@ -262,13 +150,14 @@ const chart2 = ref(null);
 const chart3 = ref(null);
 const chart4 = ref(null);
 
-const case1_opted1 = ref(false);       //数据传输优化
+const case1_opted = ref(false);       //数据传输优化
 const case1_opted2 = ref(false);       //批次大小的自适应调整
 const case2_opted = ref(false);
 const case3_opted = ref(false);
 const case4_opted = ref(false);
 const naive_execution_time1 = ref(0);
 const opt_execution_time1 = ref(0);
+const unopt_execution_time1 = ref(0);
 const naive_udf_time1 = ref(0);
 const opt_udf_time1 = ref(0);
 const unopt1_execution_time = ref(0);
@@ -278,10 +167,12 @@ const unopt2_udf_time = ref(0);
 
 const naive_execution_time2 = ref(0);
 const opt_execution_time2 = ref(0);
+const unopt_execution_time2 = ref(0);
 const naive_udf_time2 = ref(0);
 const opt_udf_time2 = ref(0);
 const naive_execution_time3 = ref(0);
 const opt_execution_time3 = ref(0);
+const unopt_execution_time3 = ref(0);
 const naive_udf_time3 = ref(0);
 const opt_udf_time3 = ref(0);
 const naive_execution_time4 = ref(0);
@@ -340,29 +231,22 @@ const initChart = (caseType) => {
     if (barchartDom1) {
       chart1.value = echarts.init(barchartDom1);
       let seriesData = ref([]);
+      let legendData = ref([]);
+      legendData.value = ['优化前', '优化后'];
       seriesData.value = [
         {
-          name: '开启数据传输优化',
+          name: '优化前',
           type: 'bar',
-          data: [unopt2_execution_time.value, unopt2_udf_time.value],
+          data: [unopt_execution_time1.value],
           label: {
             show: true,
             position: 'top'
           }
         },
         {
-          name: '开启批次大小的自适应调整',
+          name: '优化后',
           type: 'bar',
-          data: [unopt1_execution_time.value, unopt1_udf_time.value],
-          label: {
-            show: true,
-            position: 'top'
-          }
-        },
-        {
-          name: '优化全部开启',
-          type: 'bar',
-          data: [opt_execution_time1.value, opt_udf_time1.value],
+          data: [opt_execution_time1.value],
           label: {
             show: true,
             position: 'top'
@@ -372,14 +256,14 @@ const initChart = (caseType) => {
       chart1.value.setOption({
         xAxis: {
           type: 'category',
-          data: ['sql执行时间', 'udf执行时间']
+          data: ['sql执行时间']
         },
         yAxis: {
           type: 'value'
         },
         series: seriesData.value,
         legend: {
-          data: ['开启数据传输优化','开启批次大小的自适应调整','开启全部优化'],    
+          data: legendData.value,
         }
       });
     }
@@ -397,7 +281,7 @@ const initChart = (caseType) => {
         {
           name: '优化前',
           type: 'bar',
-          data: [naive_execution_time2.value, naive_udf_time2.value],
+          data: [unopt_execution_time2.value],
           label: {
             show: true,
             position: 'top'
@@ -406,7 +290,7 @@ const initChart = (caseType) => {
         {
           name: '优化后',
           type: 'bar',
-          data: [opt_execution_time2.value, opt_udf_time2.value],
+          data: [opt_execution_time2.value],
           label: {
             show: true,
             position: 'top'
@@ -416,7 +300,7 @@ const initChart = (caseType) => {
       chart2.value.setOption({
         xAxis: {
           type: 'category',
-          data: ['sql执行时间', 'udf执行时间']
+          data: ['sql执行时间']
         },
         yAxis: {
           type: 'value'
@@ -441,7 +325,7 @@ const initChart = (caseType) => {
         {
           name: '优化前',
           type: 'bar',
-          data: [naive_execution_time3.value, naive_udf_time3.value],
+          data: [unopt_execution_time3.value],
           label: {
             show: true,
             position: 'top'
@@ -450,7 +334,7 @@ const initChart = (caseType) => {
         {
           name: '优化后',
           type: 'bar',
-          data: [opt_execution_time3.value, opt_udf_time3.value],
+          data: [opt_execution_time3.value],
           label: {
             show: true,
             position: 'top'
@@ -460,7 +344,7 @@ const initChart = (caseType) => {
       chart3.value.setOption({
         xAxis: {
           type: 'category',
-          data: ['sql执行时间', 'udf执行时间']
+          data: ['sql执行时间']
         },
         yAxis: {
           type: 'value'
@@ -475,160 +359,6 @@ const initChart = (caseType) => {
       console.error('Chart3 DOM element not found');
     }
 
-    const barchartDom4 = document.getElementById('chart4');
-    if (barchartDom4) {
-      chart4.value = echarts.init(barchartDom4);
-      let seriesData = ref([]);
-      let legendData = ref([]);
-      legendData.value = ['优化前', '优化后'];
-      seriesData.value = [
-        {
-          name: '优化前',
-          type: 'bar',
-          data: [naive_execution_time4.value, naive_udf_time4.value],
-          label: {
-            show: true,
-            position: 'top'
-          }
-        },
-        {
-          name: '优化后',
-          type: 'bar',
-          data: [opt_execution_time4.value, opt_udf_time4.value],
-          label: {
-            show: true,
-            position: 'top'
-          }
-        }
-      ];
-      chart4.value.setOption({
-        xAxis: {
-          type: 'category',
-          data: ['sql执行时间', 'udf执行时间']
-        },
-        yAxis: {
-          type: 'value'
-        },
-        series: seriesData.value,
-        legend: {
-          data: legendData.value,
-        }
-      });
-    }
-    else {
-      console.error('Chart4 DOM element not found');
-    }
-
-    const lineChartDom = document.getElementById('batch_time_chart');
-    if (lineChartDom) {
-      const chart = echarts.init(lineChartDom);
-  
-      const seriesDataOpted = opt_udf_batch_time.value.map((time, index) => ({
-        name: `Batch ${index + 1}`,
-        value: time,
-      }));
-  
-      const seriesDataNaive = naive_udf_batch_time.value.map((time, index) => ({
-        name: `Batch ${index + 1}`,
-        value: time,
-      }));
-      // 设置 x 轴数据，显示批次标签
-      const xAxisData = Array.from({ length: Math.max(opt_udf_batch_time.value.length, naive_udf_batch_time.value.length) }, (_, i) => `Batch ${i + 1}`);
-
-      chart.setOption({
-        // title: {
-        //   text: 'UDF Batch/Time Comparison',
-        // },
-        tooltip: {
-        trigger: 'axis',
-        },
-        legend: {
-          data: ['优化后', '优化前'],
-        },
-        xAxis: {
-          type: 'category',
-          data: xAxisData,
-          name: '批次',
-          axisLabel: {
-            interval: 0, // 强制显示所有 x 轴标签
-            rotate: 45, // 旋转标签，避免重叠
-          }
-        },
-        yAxis: {
-          type: 'value',
-          name: '吞吐量 (row/s)',
-        },
-        dataZoom: [
-          {
-            type: 'slider',
-            start: 0,
-            end: (10 / xAxisData.length) * 100, // 只显示前10个批次
-            handleSize: '100%',
-          },
-        ],
-        series: [
-          {
-            name: '优化后',
-            type: 'line',
-            data: seriesDataOpted.map(item => item.value),
-          },
-          {
-            name: '优化前',
-            type: 'line',
-            data: seriesDataNaive.map(item => item.value),
-          },
-        ],
-      });
-    } else {
-      console.error('line DOM element not found');
-   }
-    const pieChartDom = document.getElementById('cache-hit-rate-chart');
-    if (pieChartDom) {
-      const pieChart = echarts.init(pieChartDom);
-      pieChart.setOption({
-        title: {
-          // text: '缓存命中率:${udf_hit.value}/${udf_batch_all.value}',
-          text: '缓存命中率:',
-          left: 'center'
-        },
-        tooltip: {
-          trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
-        },
-        legend: {
-          orient: 'vertical',
-          left: 'left'
-        },
-        series: [
-          {
-            name: '缓存命中率',
-            type: 'pie',
-            radius: '50%',
-            center: ['50%','50%'],   //饼图居中显示
-            data: [
-              { value: cache_hit_rate.value, name: '命中' },
-              { value: 100 - cache_hit_rate.value, name: '未命中' }
-            ],
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              formatter: '{b}: {d}%'
-            },
-            labelLine: {
-              show: true
-            }
-          }
-        ]
-      });
-    } else {
-      console.error('Pie chart DOM element not found');
-    }
   });
 };
 
@@ -652,71 +382,39 @@ const paginateData = () => {
   paginatedData.value = tableData.value.slice(start, end);
 };
 
-// 点击获取新闻数据按钮，显示所有新闻数据
-const showData = async () => {
-  sql.value = `select id,link,source,text from news limit 2000;`    //SQL语句
-  const encodedSql = encodeURIComponent(sql.value);
-  url.value = `http://49.52.27.23:8000/opted/task1?sql=${encodedSql}`;
-  await getResult(url);
-  if (result.value && result.value.ans) {
-    tableColumns.value = ["编号","链接","来源","内容"];
-    tableData.value = result.value.ans.map(row => {
-      return {
-        "编号": row[0],
-        "链接": row[1],
-        "来源": row[2],
-        "内容": row[3],
-      };
-    });
-    // tableColumns.value = Object.keys(result.ans[0]);
-    totalRecords.value = result.value.ans.length;   //后端返回总记录数
-    paginateData();  
-  }
-  // showNewsCount.value = true;
-  // newsCountText.value = `获取${tableData.value.length}条新闻`
-  // newsCountText.value = '获取200条新闻';
-};
 
 // 展示case1查询结果及优化效果
 const showCase1 = async () => {
   showedComponentType.value = '1';
-  sql1.value = `SELECT id, link, source, text, predict is_military(text) as category FROM news WHERE predict is_military(text) = "${classification.value}";`;
+  sql1.value = `SELECT * from nasa_50w where PREDICT USING Model nasa_rf_model(est_diameter_min, est_diameter_max, relative_velocity, miss_distance, absolute_magnitude) = 0;`;
   const encodedSql = encodeURIComponent(sql1.value);
   // 组装url
-  if (case1_opted2.value && case1_opted1.value) {
-    url.value = `http://49.52.27.23:8000/opted/task1?sql=${encodedSql}`;
-  } else if (case1_opted1.value === false && case1_opted2.value === true) {     //未开启数据传输优化
-    url.value = `http://49.52.27.23:8000/unopted1/task1?sql=${encodedSql}`;
-  } else if (case1_opted1.value === true && case1_opted2.value === false) {     //未开启开启批次大小的自适应调整
-    url.value = `http://49.52.27.23:8000/unopted2/task1?sql=${encodedSql}`;
+  if (case1_opted.value) {
+    url.value = `http://172.23.166.102:8000/opted/task1?sql=${encodedSql}`;
+  } else {
+    url.value = `http://172.23.166.102:8000/unopted/task1?sql=${encodedSql}`;
   }
   console.log(url.value);
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["编号","链接","来源","内容","类别"];
+    tableColumns.value = ["id","est_diameter_min","est_diameter_max","relative_velocity","miss_distance","absolute_magnitude"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "编号": row[0],
-        "链接": row[1],
-        "来源": row[2],
-        "内容": row[3],
-        "类别": row[4],
+        "id": row[0],
+        "est_diameter_min": row[1],
+        "est_diameter_max": row[2],
+        "relative_velocity": row[3],
+        "miss_distance": row[4],
+        "absolute_magnitude": row[5],
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
     totalRecords.value = result.value.ans.length;   //后端返回总记录数
     //是否开启优化
-    if (case1_opted2.value && case1_opted1.value) {          // 两个优化均开启
+    if (case1_opted.value) {          // 优化开启
       opt_execution_time1.value = result.value.execution_time;     //总执行时间
-      opt_udf_time1.value = result.value.udf_time / 1000;                //udf执行时间
-      opt_udf_batch_time.value = result.value.udf_batch_time ;    //获取批次/时间s
-    } else if (case1_opted1.value === false && case1_opted2.value === true){   //未开启数据传输优化
-      unopt1_execution_time.value = result.value.execution_time;
-      unopt1_udf_time.value = result.value.udf_time / 1000;
-    } else if (case1_opted1.value === true && case1_opted2.value === false){   //未开启批次大小自适应调整
-      unopt2_execution_time.value = result.value.execution_time;
-      unopt2_udf_time.value = result.value.udf_time / 1000;
-      naive_udf_batch_time.value = result.value.udf_batch_time;    //获取批次/时间s
+    } else {   //未开启批次大小自适应调整
+      unopt_execution_time1.value = result.value.execution_time;
     } 
     //console.log(opt_execution_time.value);
     paginateData();
@@ -734,9 +432,9 @@ const showCase2 = async () => {
   // 组装url
   //写一个if逻辑根据是否开启优化传入不同的url
   if (case2_opted.value) {
-    url.value = `http://49.52.27.23:8000/opted/task2?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/opted/task2?sql=${encodedSql}`;
   } else {
-    url.value = `http://49.52.27.23:8000/unopted/task2?sql=${encodedSql}`;
+    url.value = `http://172.23.166.102:8000/unopted/task2?sql=${encodedSql}`;
   }
   console.log(url.value);
   await getResult(url);
@@ -754,116 +452,48 @@ const showCase2 = async () => {
     totalRecords.value = result.value.ans.length;   //后端返回总记录数
     if (case2_opted.value) {     //是否开启优化
       opt_execution_time2.value = result.value.execution_time;     //总执行时间
-      opt_udf_time2.value = result.value.udf_time / 1000;
     } else {
-      naive_execution_time2.value = result.value.execution_time;
-      naive_udf_time2.value = result.value.udf_time / 1000;
+      unopt_execution_time2.value = result.value.execution_time;
     }
     // console.log(opt_execution_time.value);
     // console.log(naive_execution_time.value);
     paginateData();
     initChart('2');  
   }
-  // //发送给case4后端，作为缓存
-  // url1.value = `http://49.52.27.23:8000/opted/task4?sql=${encodedSql}`;
-  // await getResult(url1.value);
-  // console.log(url1.value);
-  //绘制优化图
-  reRender();
 };
 
-const send2to4 = async () => {
-  showedComponentType.value = '2';
-  const concatenatedValues = models.value.join('(text) + predict ');
-  sql2.value = `SELECT id,link,source,text FROM military_news WHERE predict ${concatenatedValues}(text) >= ${value_metric.value * models.value.length};`;
-  const encodedSql = encodeURIComponent(sql2.value);
-  url1.value = `http://49.52.27.23:8000/opted/task4?sql=${encodedSql}`;
-  await getResult(url1);
-  if (result.value && result.value.ans) {
-    console.log('get result')
-  }
-}
 
 // 展示case3查询结果及优化效果
 const showCase3 = async () => {
   showedComponentType.value = '3';
-  if (case3_opted.value) {
-    sql3.value = `SELECT id,source,text,predict summary_opt(text) AS summary FROM important_news order by id ASC;`;
-  } else {
-    sql3.value = `SELECT id,source,text,predict summary(text) AS summary FROM important_news order by id ASC;`;
-  }
+  sql3.value = `SELECT ID, PREDICT USING Model cmapss_rf_model(unit_number, time_cycles, setting_1, setting_2, setting_3, s_1, s_2 , s_3 , s_4 , s_5 , s_6 , s_7 , s_8 , s_9 , s_10 , s_11 , s_12 , s_13 , s_14 , s_15 , s_16 , s_17 , s_18 , s_19 , s_20 , s_21) as rul from cmapss where unit_number=1;`;
   const encodedSql = encodeURIComponent(sql3.value);
-  // 组装url
-  url.value = `http://49.52.27.23:8000/opted/task3?sql=${encodedSql}`;
+  if (case3_opted.value) {
+    url.value = `http://172.23.166.102:8000/opted/task3?sql=${encodedSql}`;
+  } else {
+    url.value = `http://172.23.166.102:8000/unopted/task3?sql=${encodedSql}`;
+  }
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["编号","来源","内容","摘要"];
+    tableColumns.value = ["id","rul"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "编号": row[0],
-        "来源": row[1],
-        "内容": row[2],
-        "摘要": row[3],
+        "id": row[0],
+        "rul": row[1],
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
     totalRecords.value = result.value.ans.length;   //后端返回总记录数
     if (case3_opted.value) {     //是否开启优化
       opt_execution_time3.value = result.value.execution_time;     //总执行时间
-      opt_udf_time3.value = result.value.udf_time / 1000;
     } else {
-      naive_execution_time3.value = result.value.execution_time;
-      naive_udf_time3.value = result.value.udf_time / 1000;
+      unopt_execution_time3.value = result.value.execution_time;
     }
     paginateData();  
   }
-  //绘制优化图
-  reRender();
   initChart('3');
 };
 
-// 展示case4查询结果及优化效果
-const showCase4 = async () => {
-  showedComponentType.value = '4';
-  sql4.value = `select source,text,predict similar_w2v("${news_text.value}",text) AS similar from history_news where predict news_lr(text)>=3 order by similar DESC limit ${sql_num.value};`;
-  const encodedSql = encodeURIComponent(sql4.value);
-  // 组装url
-  //写一个if逻辑根据是否开启优化传入不同的url
-  if (case4_opted.value) {
-    url.value = `http://49.52.27.23:8000/opted/task4?sql=${encodedSql}`;
-  } else {
-    url.value = `http://49.52.27.23:8000/opted/task1?sql=${encodedSql}`;
-  }
-  await getResult(url);
-  if (result.value && result.value.ans) {
-    tableColumns.value = ["来源","内容","相似度"];
-    tableData.value = result.value.ans.map(row => {
-      return {
-        "来源": row[0],
-        "内容": row[1],
-        "相似度": row[2],
-      };
-    });
-    // tableColumns.value = Object.keys(result.ans[0]);
-    totalRecords.value = result.value.ans.length;   //后端返回总记录数
-    if (case4_opted.value) {     //是否开启优化
-      opt_execution_time4.value = result.value.execution_time ;     //总执行时间
-      opt_udf_time4.value = result.value.udf_time / 1000;
-    } else {
-      naive_execution_time4.value = result.value.execution_time;
-      naive_udf_time4.value = result.value.udf_time / 1000;
-    }
-    udf_batch_all.value = result.value.udf_batch_all;
-    udf_batch_real.value = result.value.udf_batch_real;
-    udf_hit.value = udf_batch_all.value - udf_batch_real.value;
-    cache_hit_rate.value = udf_hit.value / udf_batch_all.value * 100;
-    console.log(udf_batch_all.value)
-    console.log(udf_batch_real.value)
-    console.log(cache_hit_rate.value)
-    paginateData();  
-  }
-  initChart('4');
-};
 
 // 执行按钮，显示执行结果
 const updateChart = (widget) => {
@@ -871,11 +501,8 @@ const updateChart = (widget) => {
     showCase1();
   } else if (widget.type === '2') {
     showCase2();
-    send2to4();
   } else if (widget.type === '3') {
     showCase3();
-  } else if (widget.type === '4') {
-    showCase4();
   }
 };
 
@@ -898,40 +525,6 @@ const getResult = async(url) => {
     }
 };
 
-const reRender = async() => {
-  //等待下一次DOM更新周期
-  await nextTick();
-  //sql 显示
-  // console.log(sql_text1.value);
-  // sql_text1.value.setVal(sql1.value);
-  //case2 优化图
-  if (showedComponentType.value === '2') {
-    tree.value.Draw(tree_data.value,"plan");
-    //showPic.value = true;
-    // naive_tree.value.Draw(naive_tree_data.value,"expr");
-    // opt_tree.value.Draw(opt_tree_data.value,"expr");
-  }
-  //case3 Python Code
-  if (showedComponentType.value === '3') {
-    if (case3_opted.value) {
-      if (udf_plan_o.value) {
-        udf_plan_o.value.setVal(rewrite_code.value);
-      }
-    } else {
-      if (udf_plan_n.value) {
-        udf_plan_n.value.setVal(code.value);
-      }
-    }
-  }
-};
-
-// const nodeClickedHandler = ((label) => {
-//   // 处理节点点击事件
-//   console.log("节点点击事件:", label);
-//   if (label === 'model_merged') {
-//     showOptedModel.value = true;
-//   }
-// });
 
 onMounted(() => {
   //获取数据
