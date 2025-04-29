@@ -427,7 +427,7 @@ const showCase1 = async () => {
 const showCase2 = async () => {
   showedComponentType.value = '2';
   const concatenatedValues = models.value.join('(text) + predict ');
-  sql2.value = `SELECT id,link,source,text FROM military_news WHERE predict ${concatenatedValues}(text) >= ${value_metric.value * models.value.length};`;
+  sql2.value = `SELECT id, battery_id, cycle, PREDICT battery_pytorch_mlp(cycle, ambient_temperature, voltage_measured, current_measured, temperature_measured, current_load, voltage_load, time) as rul from battery;`;
   const encodedSql = encodeURIComponent(sql2.value);
   // 组装url
   //写一个if逻辑根据是否开启优化传入不同的url
@@ -439,13 +439,13 @@ const showCase2 = async () => {
   console.log(url.value);
   await getResult(url);
   if (result.value && result.value.ans) {
-    tableColumns.value = ["编号","链接","来源","内容"];
+    tableColumns.value = ["id", "battery_id", "cycle", "rul"];
     tableData.value = result.value.ans.map(row => {
       return {
-        "编号": row[0],
-        "链接": row[1],
-        "来源": row[2],
-        "内容": row[3],
+        "id": row[0],
+        "battery_id": row[1],
+        "cycle": row[2],
+        "rul": row[3],
       };
     });
     // tableColumns.value = Object.keys(result.ans[0]);
