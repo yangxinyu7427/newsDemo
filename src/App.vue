@@ -232,10 +232,10 @@ const initChart = (caseType) => {
       chart1.value = echarts.init(barchartDom1);
       let seriesData = ref([]);
       let legendData = ref([]);
-      legendData.value = ['优化前', '优化后'];
+      legendData.value = ['OceanBase', 'IMBridge'];
       seriesData.value = [
         {
-          name: '优化前',
+          name: 'OceanBase',
           type: 'bar',
           data: [unopt_execution_time1.value],
           label: {
@@ -244,7 +244,7 @@ const initChart = (caseType) => {
           }
         },
         {
-          name: '优化后',
+          name: 'IMBridge',
           type: 'bar',
           data: [opt_execution_time1.value],
           label: {
@@ -276,10 +276,10 @@ const initChart = (caseType) => {
       chart2.value = echarts.init(barchartDom2);
       let seriesData = ref([]);
       let legendData = ref([]);
-      legendData.value = ['优化前', '优化后'];
+      legendData.value = ['OceanBase', 'IMBridge'];
       seriesData.value = [
         {
-          name: '优化前',
+          name: 'OceanBase',
           type: 'bar',
           data: [unopt_execution_time2.value],
           label: {
@@ -288,7 +288,7 @@ const initChart = (caseType) => {
           }
         },
         {
-          name: '优化后',
+          name: 'IMBridge',
           type: 'bar',
           data: [opt_execution_time2.value],
           label: {
@@ -320,10 +320,10 @@ const initChart = (caseType) => {
       chart3.value = echarts.init(barchartDom3);
       let seriesData = ref([]);
       let legendData = ref([]);
-      legendData.value = ['优化前', '优化后'];
+      legendData.value = ['OceanBase', 'IMBridge'];
       seriesData.value = [
         {
-          name: '优化前',
+          name: 'OceanBase',
           type: 'bar',
           data: [unopt_execution_time3.value],
           label: {
@@ -332,7 +332,7 @@ const initChart = (caseType) => {
           }
         },
         {
-          name: '优化后',
+          name: 'IMBridge',
           type: 'bar',
           data: [opt_execution_time3.value],
           label: {
@@ -424,7 +424,7 @@ const showCase1 = async () => {
 // 展示case2查询结果及优化效果
 const showCase2 = async () => {
   showedComponentType.value = '2';
-  sql2.value = `SELECT * from Gears where PREDICT USING Model gears_rf_model(Temp, Visc, Pres, Metal, Water, Additive, pH, Dens, Cond, Oxid) = 0;`;
+  sql2.value = `SELECT * from Gears where PREDICT USING Model gears_rf_skl(Temp, Visc, Pres, Metal, Water, Additive, pH, Dens, Cond, Oxid) = 0;`;
   const encodedSql = encodeURIComponent(sql2.value);
   // 组装url
   //写一个if逻辑根据是否开启优化传入不同的url
@@ -463,7 +463,7 @@ const showCase2 = async () => {
 // 展示case3查询结果及优化效果
 const showCase3 = async () => {
   showedComponentType.value = '3';
-  sql3.value = `SELECT * from flights_delay where Distance>1200 and PREDICT USING Model delay_gb_model(DepTime, Distance, Month1, DayofMonth, DayOfWeek, UniqueCarrier, Origin, Dest)=1;`;
+  sql3.value = `SELECT * from flights_delay where Distance>800 and PREDICT USING Model delay_gb_pkl(DepTime, Distance, Month1, DayofMonth, DayOfWeek, UniqueCarrier, Origin, Dest)=1;`;
   const encodedSql = encodeURIComponent(sql3.value);
   if (case3_opted.value) {
     url.value = `http://172.23.166.102:8000/opted/task6?sql=${encodedSql}`;
